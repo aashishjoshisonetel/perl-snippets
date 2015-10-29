@@ -1,0 +1,58 @@
+##################################################################################
+#
+#	THIS IS A SHORT SCRIPT THAT SENDS AN EMAIL USING THE MIME::Lite MODULE
+#	IF SOMETHING IN YOUR SCRIPT DOESN'T WORK AS EXPECTED. THIS CAN BE HELPFUL
+#	IF THE SCRIPT RUNS ON ITS OWN USING CRON OR SOMETHING SIMILAR.
+#
+#	EXAMPLES:
+#	1. my $dbh = DBI->connect(DBI_CONNECT_STATEMENT_GOES_HERE) or report error('Oops! Couldn\'t coonnect to the database!',DBI->errstr);
+#	2. open my $fh, ">", "$file_name" or report_error ("Couldn't open file $file_name!","error message: $!");
+#	
+#	IN EXAMPLE 1 WE TRIED TO CONNECT TO A DATABASE. IF THE CONNECTION FAILS FOR SOME REASON
+#	THEN IT IS HELPFUL TO HAVE THE ERROR MESSAGE REPORTED. THE ERROR MESSAGE (DBI->errstr) WILL BE SENT
+# AS THE BODY OF THE EMAIL.
+#
+# IN EXAMPLE 2 WE TRIED TO OPEN A FILE. IF THE FILE DOESN'T OPEN THEN YOU'LL BE NOTIFIED VIA EMAIL.
+#
+# A NOTE ON THE INTENDED USAGE: THIS SNIPPET IS SUPPOSED TO BE USED IN CASES WHERE SCRIPTS RUN WITHOUT HUMAN INVOLVEMENT
+# SUCH AS CRON JOBS OR SCHEDULED TASKS. IF YOU RUN A SCRIPT MANUALLY THEN YOU PROBABLY DONT NEED THIS SINCE YOU'LL
+# GET THE ERROR MESSAGES ON YOUR TERMINAL.
+#
+##################################################################################
+
+use strict;
+use warnings;
+use MIME::Lite;
+#add other modules here
+
+my $var = print "Enter some code in place of this print statement that can fail\n" or report_error("Enter the subject you want here, including $variables since this is within double quotes.",'enter only static text in single quotes. no $variables');
+
+
+##################################################################################
+#
+#	THE ERROR REPORTING SUB-ROUTING IS DEFINED BELOW. IT TAKES 2 VARIABLES:
+#	1. THE FIRST ONE IS THE SUBJECT OF THE EMAIL
+#	2. THE SECOND ONE IS THE BODY.
+#
+#	IT ACCEPTS HTML AS WELL, ALTHOUGH IT SHOULD BE USED SPARINGLY TO ENSURE
+#	YOUR MAIL ISN'T INCORRECTLY MARKED AS SPAM.
+#
+##################################################################################
+sub report_error {
+                my $msg = MIME::Lite->new(
+                                From  => 'email@address.com',
+                                To      =>'email@address.com',
+                                Subject =>$_[0],
+                                Type    =>'multipart/related'
+                );
+                $msg->attach(
+                        Type => 'text/html',
+                        Data => $_[1]
+                );
+
+                MIME::Lite->send('smtp', "address.com", Timeout=>60,
+                   AuthUser=>'email@address.com', AuthPass=>'password');
+                        $msg->send();
+
+exit;
+}
